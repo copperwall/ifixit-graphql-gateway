@@ -14,17 +14,23 @@ function promiseAllOrError<K>(promises: ReadonlyArray<Promise<K>>): Promise<Read
     let completed = 0;
 
     return new Promise((resolve, reject) => {
+        // This is a workaround for Promise.finally not being available
+        // in AWS Lambda >:(
+        function promiseCompleted() {
+            completed += 1;
+
+            if (completed == promises.length) {
+                resolve(results);
+            }
+        }
+
         promises.forEach((promise, index) => {
             promise.then(value => {
                 results[index] = value;
+                promiseCompleted();
             }).catch(err => {
                 results[index] = err;
-            }).finally(() => {
-                completed += 1;
-
-                if (completed == promises.length) {
-                    resolve(results);
-                }
+                promiseCompleted();
             });
         });
     });
