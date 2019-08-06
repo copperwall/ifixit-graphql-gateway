@@ -2,9 +2,29 @@ import { ApolloServer, gql } from 'apollo-server-lambda';
 import DataLoader from 'dataloader';
 import axios from 'axios';
 import dotenv from 'dotenv';
-import { Handler } from 'express-serve-static-core';
 
 dotenv.config();
+
+function promiseAllOrError<K>(promises: ReadonlyArray<Promise<K>>): Promise<ReadonlyArray<K>> {
+    let results: Array<K> = [];
+    let completed = 0;
+
+    return new Promise((resolve, reject) => {
+        promises.forEach((promise, index) => {
+            promise.then(value => {
+                results[index] = value;
+            }).catch(err => {
+                results[index] = err;
+            }).finally(() => {
+                completed += 1;
+
+                if (completed == promises.length) {
+                    resolve(results);
+                }
+            });
+        });
+    });
+}
 
 const guideDataLoader = new DataLoader<number, unknown>(keys => {
     return new Promise((resolve, reject) => {
@@ -12,7 +32,7 @@ const guideDataLoader = new DataLoader<number, unknown>(keys => {
             axios.get('https://ifixit.com/api/2.0/guides/' + key)
         );
 
-        Promise.all(results).then(results => {
+        promiseAllOrError(results).then(results => {
             resolve(results.map(result => result.data));
         });
     });
@@ -23,7 +43,7 @@ const userDataLoader = new DataLoader<number, unknown>(keys => {
             axios.get('https://ifixit.com/api/2.0/users/' + key)
         );
 
-        Promise.all(results).then(results => {
+        promiseAllOrError(results).then(results => {
             resolve(results.map(result => result.data));
         });
     });
