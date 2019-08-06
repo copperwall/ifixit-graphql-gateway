@@ -58,6 +58,19 @@ const typeDefs = gql`
         image: Image
         author: Author!
         public: Boolean
+        difficulty: String
+        created_date: Int
+        locale: String
+        patrol_threshold: Int
+        type: String
+        url: String
+        subject: String
+        conclusion_raw: String
+        conclusion_rendered: String
+        modified_date: Int
+        flags: [GuideFlag!]!
+        parts: [GuideThing!]!
+        tools: [GuideThing!]!
     }
 
     type Image {
@@ -85,6 +98,21 @@ const typeDefs = gql`
         silver: Int
         gold: Int
         total: Int
+    }
+
+    type GuideFlag {
+        flagid: String
+        text: String
+        title: String
+    }
+
+    type GuideThing {
+        text: String
+        notes: String
+        type: String
+        quantity: Int
+        url: String
+        thumbnail: String
     }
 
     type User {
