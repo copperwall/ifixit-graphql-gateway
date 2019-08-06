@@ -5,6 +5,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+function debug(subject: string, msg: string | object) {
+    console.log(`DEBUG: ${subject} ${JSON.stringify(msg)}`);
+}
+
 function promiseAllOrError<K>(promises: ReadonlyArray<Promise<K>>): Promise<ReadonlyArray<K>> {
     let results: Array<K> = [];
     let completed = 0;
@@ -27,6 +31,7 @@ function promiseAllOrError<K>(promises: ReadonlyArray<Promise<K>>): Promise<Read
 }
 
 const guideDataLoader = new DataLoader<number, unknown>(keys => {
+    debug("guide batch", keys);
     return new Promise((resolve, reject) => {
         const results = keys.map(key =>
             axios.get('https://ifixit.com/api/2.0/guides/' + key)
@@ -34,10 +39,13 @@ const guideDataLoader = new DataLoader<number, unknown>(keys => {
 
         promiseAllOrError(results).then(results => {
             resolve(results.map(result => result.data));
+        }).catch(err => {
+            debug("User Error", err.message);
         });
     });
 });
 const userDataLoader = new DataLoader<number, unknown>(keys => {
+    debug("user batch", keys);
     return new Promise((resolve, reject) => {
         const results = keys.map(key =>
             axios.get('https://ifixit.com/api/2.0/users/' + key)
@@ -45,6 +53,8 @@ const userDataLoader = new DataLoader<number, unknown>(keys => {
 
         promiseAllOrError(results).then(results => {
             resolve(results.map(result => result.data));
+        }).catch(err => {
+            debug("User Error", err.message);
         });
     });
 });
@@ -140,10 +150,16 @@ const typeDefs = gql`
 const resolvers = {
     Query: {
         guide: async (parent: object, { guideid } : { guideid: number }) => {
-            return guideDataLoader.load(guideid);
+            debug("Guide resolver", { guideid })
+            const guide = await guideDataLoader.load(guideid);
+            debug("Guide response", guide);
+            return guide;
         },
         user: async (parent: object, { userid } : { userid: number }) => {
-            return userDataLoader.load(userid);
+            debug("User resolver", { userid })
+            const user = await userDataLoader.load(userid);
+            debug("User response", user);
+            return user;
         }
     }
 };
