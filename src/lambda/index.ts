@@ -105,7 +105,9 @@ const server = new ApolloServer({
     resolvers,
     engine: {
         apiKey: process.env.ENGINE_API_KEY
-    }
+    },
+    introspection: true,
+    playground: true
 });
 
 export const handler = server.createHandler();
