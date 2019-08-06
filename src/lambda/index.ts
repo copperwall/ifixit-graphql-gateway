@@ -1,7 +1,8 @@
-import { ApolloServer, gql } from 'apollo-server';
+import { ApolloServer, gql } from 'apollo-server-lambda';
 import DataLoader from 'dataloader';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import { Handler } from 'express-serve-static-core';
 
 dotenv.config();
 
@@ -107,4 +108,4 @@ const server = new ApolloServer({
     }
 });
 
-server.listen();
+export const handler = server.createHandler();
